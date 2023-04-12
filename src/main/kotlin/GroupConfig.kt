@@ -12,7 +12,7 @@ class GroupConfig(
     @ValueDescription("在该组内的群聊列表及其最大人数\n" +
             "因 mirai 目前无法获取群聊最大人数，只能由用户自己定义最大人数。\n" +
             "格式如下\n" +
-            "- 群号: 最大人数")
+            "  群号: 最大人数")
     val groups by value(mapOf(
         114514L to 500,
         1919810L to 1000
@@ -33,6 +33,8 @@ class GroupConfig(
     val rejectFull by value(true)
     @ValueDescription("群满人拒绝加群申请理由")
     val rejectMessageFull by value("该群已达最大人数")
+    @ValueDescription("拒绝加群时运行检查配置")
+    val rejectCheck by value(true)
     @ValueDescription("自动同意进群")
     val autoAccept by value(false)
 
