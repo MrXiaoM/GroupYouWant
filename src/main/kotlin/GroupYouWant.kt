@@ -23,7 +23,7 @@ object GroupYouWant : KotlinPlugin(
     JvmPluginDescription(
         id = "top.mrxiaom.groupyouwant",
         name = "GroupYouWant",
-        version = "0.1.0",
+        version = "0.1.1",
     ) {
         author("MrXiaoM")
     }
@@ -104,6 +104,7 @@ object GroupYouWant : KotlinPlugin(
             member.kick(config.kickMessage, config.kickBlock)
             if (config.kickDelay > 0) delay(config.kickDelay)
         }
+        logger.info("配置 ${config.name} 踢出了 ${kickMembers.count()} 人")
     }
 }
 fun Permission.isUserHas(userId: Long): Boolean {
