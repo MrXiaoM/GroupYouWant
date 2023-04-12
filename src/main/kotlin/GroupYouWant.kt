@@ -88,21 +88,19 @@ object GroupYouWant : KotlinPlugin(
         // 筛选出机器人有权限的群
         val groups = config.groups.mapNotNull { bot.getGroup(it.key) }.filter { it.botPermission.isOperator() }
         // 收集所有群员
-        val _members = mutableMapOf<Long, MutableList<Member>>()
-        for (group in groups) {
-            group.members.forEach {
-                val member = _members[it.id] ?: mutableListOf<Member>()
-                member.add(it)
-                _members[it.id] = member
-            }
-        }
-        // 筛选出在多个群内且不说群主的人
-        var members = _members.filter { it.value.size > 1 && it.value.none { it.isOwner() } }
-        // 筛选出没有管理员的人
-        if (config.ignoreAdmin) members = members.filter { it.value.none { it.isAdministrator() } }
-        // 踢出除第一个群以外
-        val kickMembers = members.map { list -> list.value.also { it.drop(0) } }.filter { it.isNotEmpty() }
-        for (member in kickMembers.filterIsInstance<NormalMember>()) {
+        val kickMembers = groups.flatMap { it.members }.groupBy { it.id }
+            .asSequence()
+            // 筛选出没有绕过权限的人
+            .filterNot { permBypass.isUserHas(it.key) }
+            // 筛选出不是群主的人
+            .filter { it.value.noneOwner }
+            // 筛选出没有管理员的人
+            .filter { !config.ignoreAdmin || it.value.noneAdmin }
+            // 筛选出在多个群内的人
+            .filter { it.value.size > 1 }
+            // 踢出除第一个群以外
+            .map { list -> list.value.also { it.drop(0) } }.flatMap { it }
+        for (member in kickMembers) {
             member.kick(config.kickMessage, config.kickBlock)
             if (config.kickDelay > 0) delay(config.kickDelay)
         }
