@@ -1,13 +1,17 @@
 package top.mrxiaom.groupyouwant
 
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.callbackFlow
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandSender
 import net.mamoe.mirai.console.command.CompositeCommand
+import net.mamoe.mirai.console.permission.AbstractPermitteeId
+import net.mamoe.mirai.console.permission.Permission
+import net.mamoe.mirai.console.permission.PermissionService
+import net.mamoe.mirai.console.permission.PermissionService.Companion.hasPermission
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.globalEventChannel
@@ -25,14 +29,22 @@ object GroupYouWant : KotlinPlugin(
     }
 ) {
     internal val groupsList = mutableListOf<GroupConfig>()
+    lateinit var permBypass: Permission
     override fun onEnable() {
+        permBypass = PermissionService.INSTANCE.register(permissionId("bypass"), "绕过配置检查")
+
+        PluginConfig.reload()
+        reloadGroupConfig()
         val channel = globalEventChannel(coroutineContext).parentScope(this)
         channel.subscribeAlways<MemberJoinRequestEvent> { event ->
             groupsList.firstOrNull { it.bot == bot.id && it.groups.containsKey(groupId) }?.apply {
+                // 检查绕过权限
+                if (AbstractPermitteeId.ExactUser(event.fromId).hasPermission(permBypass)) return@subscribeAlways
+
                 val group = event.group ?: return@subscribeAlways
                 val groupSize = groups[groupId] ?: return@subscribeAlways
-                if (group.members.size >= groupSize) {
-                    reject(false, rejectMessage)
+                if (group.members.size >= groupSize && rejectFull) {
+                    reject(false, rejectMessageFull)
                     return@subscribeAlways
                 }
 
@@ -43,9 +55,11 @@ object GroupYouWant : KotlinPlugin(
                 if (ignoreAdmin && memberInGroups.any { it.isAdministrator() }) return@subscribeAlways
                 // 用户在1个或以上的群时拒绝
                 if (memberInGroups.isNotEmpty()) {
-                    event.reject(kickBlock, kickMessage)
-                    // 在除了第一个群以外的群踢出
-                    memberInGroups.drop(0).forEach { it.kick(kickMessage, kickBlock) }
+                    event.reject(rejectBlock, rejectMessage)
+                    // 运行检查配置
+                    if (memberInGroups.size > 1 && rejectCheck) {
+                        check(this)
+                    }
                 }
                 // 自动接受
                 else if (autoAccept) event.accept()
@@ -108,9 +122,13 @@ object Command : CompositeCommand(
         GroupYouWant.reloadGroupConfig()
         sender.sendMessage("配置文件已重载")
     }
+    @OptIn(ConsoleExperimentalApi::class)
     @SubCommand
-    @Description("检查重复群员 (不填 config 时检查全部)")
-    suspend fun check(sender: CommandSender, config: String?) {
+    @Description("检查重复群员 (不填配置时检查全部)")
+    suspend fun check(
+        sender: CommandSender,
+        @Name("配置") config: String? = null
+    ) {
         if (config == null) {
             sender.sendMessage("正在执行检查 *全部配置")
             for (cfg in GroupYouWant.groupsList) GroupYouWant.check(cfg)
@@ -125,5 +143,16 @@ object Command : CompositeCommand(
             GroupYouWant.check(cfg)
         }
         sender.sendMessage("检查完毕")
+    }
+    @SubCommand
+    @Description("查看所有已加载的配置")
+    suspend fun list(sender: CommandSender) {
+        sender.sendMessage(GroupYouWant.groupsList.map {
+                "${it.name}:\n\t" + listOf(
+                    "机器人: ${it.bot}",
+                    "群聊列表:",
+                    *it.groups.keys.map { "\t$it" }.toTypedArray()
+                ).joinToString("\n\t")
+        }.joinToString("\n"))
     }
 }
