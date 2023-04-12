@@ -1,7 +1,7 @@
 # GroupYouWant
 > 「你想要的插件」系列作品
 
-[![](https://shields.io/github/downloads/MrXiaoM/GroupYouWant/total)](https://github.com/MrXiaoM/GroupYouWant/releases) [![](https://img.shields.io/badge/mirai--console-2.14.0-blue)](https://github.com/mamoe/mirai) [![](https://img.shields.io/badge/MiraiForum-post-yellow)](https://mirai.mamoe.net/)
+[![](https://shields.io/github/downloads/MrXiaoM/GroupYouWant/total)](https://github.com/MrXiaoM/GroupYouWant/releases) [![](https://img.shields.io/badge/mirai--console-2.14.0-blue)](https://github.com/mamoe/mirai) [![](https://img.shields.io/badge/MiraiForum-post-yellow)](https://mirai.mamoe.net/topic/2184)
 
 只允许用户加入其中一个联合群聊
 
