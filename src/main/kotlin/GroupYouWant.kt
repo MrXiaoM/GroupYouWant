@@ -39,7 +39,7 @@ object GroupYouWant : KotlinPlugin(
         channel.subscribeAlways<MemberJoinRequestEvent> { event ->
             groupsList.firstOrNull { it.bot == bot.id && it.groups.containsKey(groupId) }?.apply {
                 // 检查绕过权限
-                if (AbstractPermitteeId.ExactUser(event.fromId).hasPermission(permBypass)) return@subscribeAlways
+                if (permBypass.isUserHas(fromId)) return@subscribeAlways
 
                 val group = event.group ?: return@subscribeAlways
                 val groupSize = groups[groupId] ?: return@subscribeAlways
@@ -50,9 +50,9 @@ object GroupYouWant : KotlinPlugin(
 
                 val memberInGroups = groups.mapNotNull { event.bot.getGroup(it.key)?.getMember(event.fromId) }
                 // 不拒绝群主
-                if (memberInGroups.any { it.isOwner() }) return@subscribeAlways
+                if (!memberInGroups.noneOwner) return@subscribeAlways
                 // 不拒绝管理员
-                if (ignoreAdmin && memberInGroups.any { it.isAdministrator() }) return@subscribeAlways
+                if (ignoreAdmin && !memberInGroups.noneAdmin) return@subscribeAlways
                 // 用户在1个或以上的群时拒绝
                 if (memberInGroups.isNotEmpty()) {
                     event.reject(rejectBlock, rejectMessage)
@@ -156,3 +156,11 @@ object Command : CompositeCommand(
         }.joinToString("\n"))
     }
 }
+fun Permission.isUserHas(userId: Long): Boolean {
+    return AbstractPermitteeId.ExactUser(userId).hasPermission(this)
+}
+val Iterable<Member>.noneAdmin: Boolean
+    get() = none { it.isAdministrator() }
+val Iterable<Member>.noneOwner: Boolean
+    get() = none { it.isOwner() }
+
