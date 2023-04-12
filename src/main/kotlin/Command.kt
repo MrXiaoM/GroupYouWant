@@ -20,6 +20,7 @@ object Command : CompositeCommand(
         GroupYouWant.reloadGroupConfig()
         sender.sendMessage("配置文件已重载")
     }
+
     @OptIn(ConsoleExperimentalApi::class)
     @SubCommand
     @Description("检查重复群员 (不填配置时检查全部)")
@@ -30,8 +31,7 @@ object Command : CompositeCommand(
         if (config == null) {
             sender.sendMessage("正在执行检查 *全部配置")
             for (cfg in GroupYouWant.groupsList) GroupYouWant.check(cfg)
-        }
-        else {
+        } else {
             val cfg = GroupYouWant.groupsList.firstOrNull { it.name.equals(config, true) }
             if (cfg == null) {
                 sender.sendMessage("配置 $config 不存在")
@@ -42,6 +42,7 @@ object Command : CompositeCommand(
         }
         sender.sendMessage("检查完毕")
     }
+
     @SubCommand
     @Description("查看所有已加载的配置")
     suspend fun list(sender: CommandSender) {

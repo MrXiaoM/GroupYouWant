@@ -3,20 +3,16 @@ package top.mrxiaom.groupyouwant
 import kotlinx.coroutines.delay
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
-import net.mamoe.mirai.console.command.CommandSender
-import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.permission.AbstractPermitteeId
 import net.mamoe.mirai.console.permission.Permission
 import net.mamoe.mirai.console.permission.PermissionService
 import net.mamoe.mirai.console.permission.PermissionService.Companion.hasPermission
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.utils.info
-import top.mrxiaom.groupyouwant.GroupYouWant.reload
 import java.io.File
 
 object GroupYouWant : KotlinPlugin(
@@ -68,17 +64,18 @@ object GroupYouWant : KotlinPlugin(
         Command.register(true)
         logger.info { "Plugin loaded" }
     }
+
     fun reloadGroupConfig() {
         groupsList.clear()
         val path = File(configFolder, "groups")
         if (!path.exists()) {
             groupsList.add(GroupConfig("default").also { it.save() })
             path.mkdirs()
-        }
-        else for (file in path.also { it.mkdirs() }.listFiles()) {
+        } else for (file in path.also { it.mkdirs() }.listFiles()) {
             groupsList.add(GroupConfig(file.nameWithoutExtension))
         }
     }
+
     suspend fun check(config: GroupConfig) {
         val bot = Bot.getInstanceOrNull(config.bot)
         if (bot == null) {
@@ -107,9 +104,11 @@ object GroupYouWant : KotlinPlugin(
         logger.info("配置 ${config.name} 踢出了 ${kickMembers.count()} 人")
     }
 }
+
 fun Permission.isUserHas(userId: Long): Boolean {
     return AbstractPermitteeId.ExactUser(userId).hasPermission(this)
 }
+
 val Iterable<Member>.noneAdmin: Boolean
     get() = none { it.isAdministrator() }
 val Iterable<Member>.noneOwner: Boolean
