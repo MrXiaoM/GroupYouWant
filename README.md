@@ -34,7 +34,7 @@
 
 到 [Releases](https://github.com/MrXiaoM/GroupYouWant/releases) 下载插件并放入 plugins 文件夹进行安装
 
-> 下载 CommandYouWant-*.mirai2.jar
+> 下载 GroupYouWant-*.mirai2.jar  
 > 从 2.12.0-RC 起，mirai 修复了配置文件子路径问题，故本插件仅能运行在 mirai 2.12.0-RC 或更高版本。
 
 安装完毕后，编辑配置文件作出你想要的修改。在控制台执行 /guw reload 重载配置即可~
